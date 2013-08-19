@@ -5,7 +5,7 @@ This will download the high-resolution Open Content Images released into the pub
 It uses casper.js and bash to find the relevant URLs and download the images and their metadata.
 
 Usage:
-./gettyGet.sh <startPage> <endPage>
+./gettyGet.sh &lt;startPage&gt; &lt;endPage&gt;
 
 The script isn't smart enough to know when there are no more pages, so if you wanted to get ALL the things, just would enter the last page value you see on this website as the endPage:
 
