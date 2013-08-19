@@ -1,4 +1,5 @@
-# gettyGet: Automate the Download of the Public Domain photos released by the Getty Museum
+# gettyGet: 
+##Automate the Download of the Public Domain photos released by the Getty Museum
 
 This will download the high-resolution Open Content Images released into the public domain by the Getty museum. It downloads the images specified within a given page range. A page defaults to 10 items, so getting pages 1-3 will result in the first 30 items.
 
