@@ -36,6 +36,8 @@ if [ $1 -gt $2 ]; then
 fi
 
 # Got the URLs, now Download the images:
+
+# get json value
 getConfigValueForKey () {
   echo $(cat "$root/config.json" | python -c 'import json,sys;obj=json.load(sys.stdin);print obj['"\"$1\""']')
 }
