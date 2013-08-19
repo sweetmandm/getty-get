@@ -3,14 +3,15 @@ var fs = require('fs');
 var casper = require('casper').create();
 
 // The base path for all public domain images. Append the page number to the end.
-var imageUrlsFile = 'GettyImageUrls.txt';
+var config = JSON.parse(fs.read("../config.json"));
+var imageUrlsFile = config.imageUrlsFile;//'GettyImageUrls.txt';
+var metadataUrlsFile = config.metadataUrlsFile;
 var basePath = 'http://search.getty.edu/gateway/search?q=&cat=highlight&f=%22Open+Content+Images%22&rows=10&srt=a&dir=s&pg=';
 
-function smartLog (logString) {
-  if (verboseLog) {
-    console.log(logString);
-  }
-}
+
+//===============================
+// Utility Functions
+//===============================
 
 // Append the current page index to the base path
 function basePathAtIndex(i) {
@@ -23,6 +24,15 @@ function getImagePages() {
   return Array.prototype.map.call(links, function(e) {
     return e.getAttribute('href');
   });
+}
+
+function buildMetadataUrlsFromArray(links) {
+  var meta = [];
+  links.forEach(function(thisLink) {
+    var objectid = getURLParameter(thisLink, 'objectid');
+    meta.push('http://search.getty.edu/gateway/search?ex=1&exIDs=info:getty/object/' + objectid); 
+  });
+  return meta;
 }
 
 // From the image page, snag the download link:
@@ -45,7 +55,9 @@ function getURLParameter(urlstring, name) {
         return results[1];
 }
 
-// Get ALL the things.
+//===============================
+// Main Function to Get the URLs
+//===============================
 function gettyGet(pageIdx, endPage) {
   var url = basePathAtIndex(pageIdx);
 
@@ -53,30 +65,41 @@ function gettyGet(pageIdx, endPage) {
 
     // Print this URL:
     var statusStyle = {fg: 'blue', bold: true };
-    this.echo('[*]url: ' + url);
+    this.echo('[*] Page url: ' + url);
 
     // Get all links:
     var links = this.evaluate(getImagePages);
+    var metaXML = buildMetadataUrlsFromArray(links);
 
     // Print list of links:
-    this.echo('[+] ' + links.length + ' links found:');
+    this.echo('[+] ' + links.length + ' pages found:');
     this.echo('  ' + links.join('\n  '));
+    this.echo('[+] ' + metaXML.length + ' metadata links built:');
+    this.echo('  ' + metaXML.join('\n  '));
 
     var i = -1;
     this.then(function() {
       this.eachThen(links, function() {
         i++;
         this.thenOpen(links[i], function() {
-          this.echo(' link ' + i + ': ' + this.getTitle());
+          this.echo(' link for page index ' + i + ':');
 
           var dl = this.evaluate(getDownloadLink);
 
-          // Print the download page link:
-          var statusStyle = {fg: 'green', bold: true};
+          // Print the download link:
           var dlLink = getURLParameter(dl, 'dlimgurl');
           this.echo('  [*] image url: ' + dlLink, 'INFO');
+
+          if (dlLink) {
+            var metaUrl = metaXML[i]; 
+            var metaString = metaUrl + '\n';
+            fs.write(metadataUrlsFile, metaString, 'a');
+          } else {
+            this.echo('[-] WARNING: missed an image url for page: ' + url);
+          }
+          // Append the new URL to the list:
           var imageUrl = dlLink + '\n';
-          fs.write(imageUrlsFile, imageUrl, 'a'); // Append the new url to list
+          fs.write(imageUrlsFile, imageUrl, 'a'); 
         });
       });
 
@@ -92,6 +115,9 @@ function gettyGet(pageIdx, endPage) {
   });
 }
 
+//===============================
+// Errors
+//===============================
 casper.on('error', function(msg,backtrace) {
   this.echo("=========================");
   this.echo("ERROR:");
@@ -108,6 +134,9 @@ casper.on("page.error", function(msg, backtrace) {
   this.echo("=========================");
 });
 
+//===============================
+// Start
+//===============================
 casper.start().then(function () {
   // removing default options passed by the Python executable
   casper.cli.drop("cli");
@@ -122,7 +151,10 @@ casper.start().then(function () {
   if (startPage > endPage) {
     this.echo("Start page cannot be greater than end page.").exit();
   }
+  this.echo('Writing image URLs to file: ' + imageUrlsFile);
+  this.echo('Writing metadata URLs to file: ' + metadataUrlsFile);
   fs.write(imageUrlsFile, "");
+  fs.write(metadataUrlsFile, "");
   // Begin:
   gettyGet(startPage, endPage);
 });
