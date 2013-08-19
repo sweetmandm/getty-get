@@ -1,12 +1,6 @@
 var verboseLog = true;
 var fs = require('fs');
-var casper = require('casper').create(
-  {
-//  verbose: true,
-//  logLevel: 'debug'
-  }
-);
-
+var casper = require('casper').create();
 
 // The base path for all public domain images. Append the page number to the end.
 var imageUrlsFile = 'GettyImageUrls.txt';
@@ -39,11 +33,7 @@ function getDownloadLink() {
   })[0]; // should only be one link that matches above selectors
 }
 
-function printc(color, text) {
-  var statusStyle = {fg: color, bold: true };
-  this.echo(this.colorizer.format(text, statusStyle));
-}
-
+// From a given url, get the query parameter specified by 'name':
 function getURLParameter(urlstring, name) {
   name = name.replace(/[\[]/,"\\[").replace(/[\]]/,"\\]");
   var regexS = "[\\?&]"+name+"=([^&#]*)";
@@ -55,12 +45,8 @@ function getURLParameter(urlstring, name) {
         return results[1];
 }
 
-//function getURLParameter(urlstring, name) {
-//    return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(urlstring.search)||[,""])[1].replace(/\+/g, '%20'))||null;
-//}
-
 // Get ALL the things.
-function goGetThem(pageIdx, endPage) {
+function gettyGet(pageIdx, endPage) {
   var url = basePathAtIndex(pageIdx);
 
   casper.open(url).then(function() {
@@ -68,14 +54,14 @@ function goGetThem(pageIdx, endPage) {
     // Print this URL:
     var statusStyle = {fg: 'blue', bold: true };
     this.echo('[*]url: ' + url);
-    
+
     // Get all links:
     var links = this.evaluate(getImagePages);
-    
+
     // Print list of links:
     this.echo('[+] ' + links.length + ' links found:');
     this.echo('  ' + links.join('\n  '));
-    
+
     var i = -1;
     this.then(function() {
       this.eachThen(links, function() {
@@ -99,7 +85,7 @@ function goGetThem(pageIdx, endPage) {
         var nextIdx = pageIdx+1;
         if (nextIdx <= endPage) {
           this.echo('going to page: ' + nextIdx);
-          goGetThem(nextIdx, endPage);
+          gettyGet(nextIdx, endPage);
         }
       });
     });
@@ -138,7 +124,7 @@ casper.start().then(function () {
   }
   fs.write(imageUrlsFile, "");
   // Begin:
-  goGetThem(startPage, endPage);
+  gettyGet(startPage, endPage);
 });
 
 casper.run();
