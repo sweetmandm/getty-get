@@ -50,10 +50,12 @@ casperjs "$root/retreiveUrls.js" $1 $2
 
 imageUrlsFile=$(getConfigValueForKey "imageUrlsFile")
 metadataUrlsFile=$(getConfigValueForKey "metadataUrlsFile")
+symlinkdir=$(getConfigValueForKey "symlinkDirectory")
 
 echo "Images File: $imageUrlsFile"
 echo "Metadata File: $metadataUrlsFile"
 
+mkdir $symlinkdir
 i=1;
 while read p; do
   # Get the corresponding line from the metadata file.
@@ -70,6 +72,8 @@ while read p; do
   # Download the files:
   curl -O $p
   curl $metaUrl -o "$dir"".xml"
+  # symlink the images to a folder so they're easier to look through:
+  ln -s "$(pwd)/""$(ls | grep jpg)" "../$symlinkdir/""$(basename $(pwd))-""$(ls | grep jpg)"
   cd ..
   let i++
 done < $imageUrlsFile

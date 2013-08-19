@@ -1,5 +1,6 @@
 {
   "imageUrlsFile": "_GettyImageUrls.txt",
   "metadataUrlsFile": "_MetaXMLUrls.txt",
-  "destinationFolder": "Files"
+  "destinationFolder": "Files",
+  "symlinkDirectory": "_image-symlinks"
 }
