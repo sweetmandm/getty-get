@@ -35,8 +35,6 @@ if [ $1 -gt $2 ]; then
   exit 1
 fi
 
-# Got the URLs, now Download the images:
-
 # get json value
 getConfigValueForKey () {
   echo $(cat "$root/config.json" | python -c 'import json,sys;obj=json.load(sys.stdin);print obj['"\"$1\""']')
@@ -49,6 +47,8 @@ cd $dest
 
 # Retreive the URLs for images + metadata:
 casperjs "$root/retreiveUrls.js" $1 $2
+
+# Got the URLs, now Download the images:
 
 imageUrlsFile=$(getConfigValueForKey "imageUrlsFile")
 metadataUrlsFile=$(getConfigValueForKey "metadataUrlsFile")
